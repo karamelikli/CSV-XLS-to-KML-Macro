@@ -1,0 +1,46 @@
+Sub kml()
+Dim Longitude  As Integer
+Dim Latitude As Integer
+Dim ColOfName As Integer
+Dim ColOfDescription As Integer
+'settings
+Longitude = 1
+Latitude = 2
+ColOfName = 4
+ColOfDescription = 7
+    
+    With ActiveSheet
+    LastRow = .Cells(.Rows.Count, "A").End(xlUp).Row
+    ' MsgBox LastRow
+    End With
+    
+
+
+Dim FileName As String
+    Dim MyWB As Workbook
+    Dim DataRange As Range
+
+ Set MyWB = ThisWorkbook
+    FileName = MyWB.Path & "\" & "KML-Exported" & VBA.Format(VBA.Now, "dd-MMM-yyyy hh-mm") & ".kml"
+
+
+Dim kml As Integer
+kml = FreeFile
+
+Open FileName For Output As kml
+Print #kml, "<?xml version=" & Chr(34) & "1.0" & Chr(34) & " encoding=" & Chr(34) & "UTF-8" & Chr(34) & Chr(63) & "><kml xmlns= " & Chr(34) & "http://earth.google.com/kml/2.0 " & Chr(34) & "><Document>"
+For Line = 1 To LastRow
+        Print #kml, "<Placemark>"
+            Print #kml, "<name>" & Replace(LCase(Cells(Line, ColOfName)), "&", "&amp;") & "</name>"
+            Print #kml, "<description>" & Replace(LCase(Cells(Line, ColOfDescription)), "&", "&amp;") & "</description>"
+            Print #kml, "<Point><coordinates>" & LCase(Cells(Line, Longitude)) & "," & LCase(Cells(Line, Latitude)) & ",0</coordinates></Point>"
+        Print #kml, "</Placemark>"
+Next Line
+ 
+ 
+' Close file
+Print #kml, "</Document></kml>"
+Close #kml
+    
+End Sub
+

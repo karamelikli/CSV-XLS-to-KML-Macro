@@ -1,0 +1,94 @@
+
+Sub ODS2KMLConvertor
+
+'settings
+Longitude = 1
+Latitude = 2
+ColOfName = 3
+ColOfDescription = 4
+
+'First export to CSV which we will later use as the source for the export to json
+Dim Propval(1) as New com.sun.star.beans.PropertyValue
+Propval(0).Name = "FilterName"
+Propval(0).Value = "Text - txt - csv (StarCalc)"
+Propval(1).Name = "FilterOptions"
+Propval(1).Value ="94,34,0,1,1"
+Doc = ThisComponent
+Dim FileName as String
+FileName = Doc.getURL()
+splitName = split(FileName, ".")
+FileName = splitName(0) + ".csv"
+Doc.StoreToURL(FileName, Propval())
+
+'Export to JSON
+
+'Get the number of keys in the header of the csv
+Dim csv As Integer
+Dim len As Integer
+csv = FreeFile
+Open FileName For Input As csv
+Line Input #csv, first
+keys = split(first, "^")
+len = 0
+For Each i in keys
+	len = len + 1
+Next i
+
+'Need to count the number of lines in the csv (after header line)
+Dim lines as Integer
+lines = 0
+Do While not eof(csv)
+	Line Input #csv, line   
+	If line <>"" Then
+		lines = lines + 1
+	End If
+Loop
+Close #csv
+
+'Need to re-open the csv again for a fresh read from just after the header
+Open FileName For Input As csv
+Line Input #csv, line
+
+'Open the JSON file for writing
+Dim json As Integer
+Dim CurrentLine As String
+Dim fn As String
+fn = splitName(0) + ".kml" 
+kml = Freefile
+
+Open fn For Output As kml
+Print #kml, "<?xml version=" & CHR(34) &"1.0" & CHR(34) &" encoding=" & CHR(34) &"UTF-8"& CHR(34)   & CHR(63) &"><kml xmlns= "& CHR(34) &"http://earth.google.com/kml/2.0 "& CHR(34) &"><Document>"
+
+For line = 0 to lines-1
+	Line Input #csv, CurrentLine   
+	If CurrentLine <>"" Then
+    	values = split(CurrentLine, "^")
+    	
+    	'Find the last non-empty or non-zero line for each entry
+    	lastValidLine = 0
+    	For j = 0 to len-1
+    		If values(j) = "" OR values(j) = "0" Then
+    			'NOT
+    		Else
+    			lastValidLine = j
+    		End If
+    	Next j
+    		
+    	Print #kml, "<Placemark>"
+    		Print #kml, "<name>"& Replace(LCase(values(ColOfName-1)),"&","&amp;") &"</name>"
+    		Print #kml, "<description>"& Replace(LCase(values(ColOfDescription-1)),"&","&amp;") &"</description>"
+    		Print #kml, "<Point><coordinates>"& LCase(values(Longitude-1))&","&LCase(values(Latitude-1))&",0</coordinates></Point>"	
+    
+    	
+    	Print #kml, "</Placemark>"
+    	
+	End If
+Next line
+ 
+ 
+' Close file 
+Print #kml, "</Document></kml>"
+Close #kml
+Close #csv          
+
+End Sub

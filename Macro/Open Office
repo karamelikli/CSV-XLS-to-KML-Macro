@@ -17,7 +17,7 @@ Doc = ThisComponent
 Dim FileName as String
 FileName = Doc.getURL()
 splitName = split(FileName, ".")
-FileName = splitName(0) + ".csv"
+FileName = splitName(0) + "_temp_willbeDeleted.csv"
 Doc.StoreToURL(FileName, Propval())
 
 'Export to JSON
@@ -90,5 +90,6 @@ Next line
 Print #kml, "</Document></kml>"
 Close #kml
 Close #csv          
+Kill FileName 
 
 End Sub
